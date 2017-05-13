@@ -1,0 +1,162 @@
+﻿@model PagedList.IPagedList<Airlines.Models.Company>
+@using PagedList.Mvc;
+@using Airlines.Models;
+
+<link href="~/Content/PagedList.css" rel="stylesheet" type="text/css" />
+
+<div>
+    <div class='btn-toolbar pull-right'>
+        <div class='btn-group'>
+            <p>@Html.ActionLink($"Create New {ViewBag.Title}", "Create", "Companies", new { id = 0, page = ViewBag.Page, typeId = ViewBag.TypeId } , new { @class = "btn btn-primary btn-md pull-right" })</p>
+        </div>
+    </div>
+    <h1>@($"{ViewBag.Title}s")</h1>
+</div>
+
+<table class="table-airline table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.FirstOrDefault().Name)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.FirstOrDefault().Description)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.FirstOrDefault().Country.Name)
+        </th>
+        <th>
+
+        </th>
+    </tr>
+
+@foreach (var item in Model) {
+    <tr style="background-color: #7DA1C4;">
+        <td class="col-md-2">                        
+            @if (item.Logo != null)
+            {
+                <img src="data:image; base64, @System.Convert.ToBase64String(item.Logo)" />
+            }              
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Description)
+        </td>
+        <td class="col-md-2">
+            @Html.DisplayFor(modelItem => item.Country.Name)
+        </td>
+        <td class="col-sm-2" style="color: #FFFFFF;">
+            @Html.ActionLink("Edit", "Edit", new { id = item.ID, page = ViewBag.Page, typeId = ViewBag.TypeId }, new { @style = "color: #FFFFFF" }) |
+            @Html.ActionLink("Details", "Details", new { id = item.ID, page = ViewBag.Page, typeId = ViewBag.TypeId }, new { @style = "color: #FFFFFF" }) |
+            @Html.ActionLink("Delete", "Delete", new { id = item.ID, page = ViewBag.Page, typeId = ViewBag.TypeId }, new { @style = "color: #FFFFFF" })
+        </td>
+    </tr>
+    if (item.CompanyTypeID == (int)CompanyTypeValue.Airline)
+    {
+        <tr>
+            <td></td>
+            <td colspan="3">
+                <table class="sub-airline table" style="background-color: #7DA1C4;">
+                    <tr>
+                        <th style="vertical-align: middle;">
+                            Aircraft
+                        </th>
+                        <th style="vertical-align: middle;">
+                            Description
+                        </th>
+                        <th class="text-right" style="vertical-align: middle;">
+                            Capacity
+                        </th>
+                        <th>
+                            <button type="button" class="AddAircraft btn btn-info btn-md pull-right" data-toggle="modal" data-id="@item.ID" data-target="#modalAircraft">Add Aircraft</button>
+                        </th>
+                    </tr>
+                    @foreach (var plane in ((List<AirlineAircraft>)ViewBag.Aircraft).Where(a => a.CompanyID == item.ID))
+                    {
+                        <tr>
+                            <td class="col-md-3">
+                                @plane.CompanyName @plane.AircraftName
+                            </td>
+                            <td class="col-md-6">
+                                @plane.Description
+                            </td>
+                            <td class="text-right">
+                                @plane.Capacity
+                            </td>
+                            <td>
+                                @Html.ActionLink("Delete", "DeleteAircraft", new { id = item.ID, page = ViewBag.Page, typeId = ViewBag.TypeId, aircraftId = plane.ID }, new { @style = "color: #FFFFFF" })
+                            </td>
+                        </tr>
+                    }
+                </table>
+            </td>
+        </tr>
+    }
+
+}
+
+</table>
+
+<div id="modalAircraft" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+
+        <!-- Modal content-->
+        <div class="modal-content">            
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Aircraft</h4>
+            </div>
+            <div class="modal-body">
+                <table class="table-airline table">
+                    <tr>
+                        <th>
+                            Aircraft
+                        </th>
+                        <th></th>
+                    </tr>
+                    @foreach (var item in (List<Aircraft>)ViewBag.AircraftList)
+                    {
+                        <tr>
+                            <td>
+                                @item.CompanyName @item.Name
+                            </td>
+                            <td>
+                                @Html.ActionLink("Add", "AddAircraft", new { id = 0, page = ViewBag.Page, typeId = ViewBag.TypeId, aircraftId = item.ID })
+                            </td>
+                        </tr>                        
+                    }
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+Page @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) of @Model.PageCount
+
+@Html.PagedListPager(Model, page => Url.Action("Index", new { id = 0, page, typeId = ViewBag.TypeId }))
+
+@section Scripts {
+
+    <script>
+        $(document).on("click", ".AddAircraft", function () {
+
+            $.ajax({
+                url: '@Url.Action("SelectedCompany", "Companies")',
+                type: "POST",                
+                data: { companyId: $(this).data('id') },
+                success: function () {                    
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    alert(XMLHttpRequest.html + ' ' + textStatus + ' ' + errorThrown);
+                }
+            });            
+        });
+
+        function DeleteAircraft() {
+            alert('delete');
+        }
+
+    </script>
+}
